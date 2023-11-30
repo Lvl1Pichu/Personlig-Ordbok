@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import SearchComponent from './SearchComponent';
+import SearchComponent from '../SearchComponent';
 
 describe('SearchComponent', () => {
   it('calls console.log with the correct search term when search button is clicked', async () => {
