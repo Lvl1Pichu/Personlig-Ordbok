@@ -50,7 +50,7 @@ describe('SearchComponent API Interaction', () => {
             meanings: [
               {
                 definitions: [
-                  { definition: "Hello!" } // Mock a simpler version for the test
+                  { definition: "Hello!" }
                 ]
               }
             ],
