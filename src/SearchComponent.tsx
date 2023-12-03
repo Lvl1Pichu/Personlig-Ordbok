@@ -1,4 +1,5 @@
 import React, { useState, ChangeEvent } from 'react';
+import styled from 'styled-components';
 
 const SearchComponent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -7,6 +8,7 @@ const SearchComponent: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchDefinition = async (word: string) => {
+    // Make call to the API, fails give error messages and empty search too
     try {
       const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
       if (!response.ok) {
@@ -49,34 +51,75 @@ const SearchComponent: React.FC = () => {
   };
 
   return (
-    <div>
-      <input
+   <div>
+    <Container>
+      <SearchInput
         type="text"
-        placeholder="Sök efter ett ord..."
+        placeholder="Search for a word..."
         value={searchTerm}
         onChange={handleChange}
       />
-      <button onClick={handleSearch}>Sök</button>
-      {errorMessage && (
-        <div style={{ color: 'red' }}>
-          <p>{errorMessage}</p>
-        </div>
-      )}
+      <SearchButton onClick={handleSearch}>Search</SearchButton>
+      </Container>
+
+      {errorMessage && <ErrorMessage><p>{errorMessage}</p></ErrorMessage>}
       {definition && (
-        <div>
+        <Definition>
           <h3>Definition:</h3>
           <p>{definition}</p>
-        </div>
+        </Definition>
       )}
       {audioUrl && (
-        <div>
-          <audio controls src={audioUrl}>
-            Your browser does not support the audio element.
-          </audio>
-        </div>
+        <audio controls src={audioUrl}>
+          Your browser does not support the audio element.
+        </audio>
       )}
-    </div>
+  </div>     
   );
 };
+
+const Container = styled.div`
+display: flex;
+align-items: center;
+justify-content: center;
+`
+
+
+const SearchInput = styled.input`
+  padding: 10px;
+  margin-right: 10px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  outline: none;
+
+  &:focus {
+    border-color: #4CAF50;
+  }
+`;
+
+const SearchButton = styled.button`
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+
+  &:hover {
+    background-color: #45a049;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: red;
+  margin-top: 10px;
+`;
+
+const Definition = styled.div`
+  margin-top: 10px;
+`;
+
 
 export default SearchComponent;
