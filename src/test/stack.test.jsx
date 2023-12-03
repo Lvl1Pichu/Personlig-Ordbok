@@ -1,19 +1,19 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'; // Import waitFor here
 import userEvent from '@testing-library/user-event';
 import SearchComponent from '../SearchComponent';
 
 describe('SearchComponent Rendering on Screen', () => {
   test('renders input and search button', () => {
     render(<SearchComponent />);
-    expect(screen.getByPlaceholderText('Sök efter ett ord...')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /sök/i })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search for a word...')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
   });
 });
 
 describe('SearchComponent State Management', () => {
   test('updates searchTerm on input change', () => {
     render(<SearchComponent />);
-    const input = screen.getByPlaceholderText('Sök efter ett ord...');
+    const input = screen.getByPlaceholderText('Search for a word...');
     fireEvent.change(input, { target: { value: 'hello' } });
     expect(input.value).toBe('hello');
   });
@@ -22,14 +22,13 @@ describe('SearchComponent State Management', () => {
 describe('SearchComponent Event Handling', () => {
   test('calls handleSearch on button click', async () => {
     render(<SearchComponent />);
-    const input = screen.getByPlaceholderText('Sök efter ett ord...');
+    const input = screen.getByPlaceholderText('Search for a word...');
     userEvent.type(input, 'hello');
-    const button = screen.getByRole('button', { name: /sök/i });
+    const button = screen.getByRole('button', { name: /search/i }); // Corrected button text
     userEvent.click(button);
     // Additional assertions or wait operations might be required here
   });
 });
-
 global.fetch = vi.fn(() =>
   Promise.resolve({
     json: () => Promise.resolve({ /* Mocked response data */ }),
@@ -61,43 +60,46 @@ describe('SearchComponent API Interaction', () => {
     );
 
     render(<SearchComponent />);
-    const input = screen.getByPlaceholderText('Sök efter ett ord...');
+    const input = screen.getByPlaceholderText('Search for a word...');
     userEvent.type(input, 'Hello');
-    const button = screen.getByRole('button', { name: /sök/i });
+    const button = screen.getByRole('button', { name: /search/i });
     userEvent.click(button);
 
-    // Check if the mocked definition text appears in the document
-    const definitionText = await screen.findByText((content, element) => 
-    element.textContent === "Hello!"
-  );    expect(definitionText).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Hello!")).toBeInTheDocument();
+    });
 
     // Check if the fetch was called correctly
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch).toHaveBeenCalledWith(`https://api.dictionaryapi.dev/api/v2/entries/en/hello`);
+    expect(fetch).toHaveBeenCalledWith(`https://api.dictionaryapi.dev/api/v2/entries/en/Hello`);
   });
 });
+
+
 
 describe('SearchComponent Error Handling', () => {
   test('displays error message on fetch failure', async () => {
-    fetch.mockImplementationOnce(() => Promise.reject(new Error('Network error')));
+    fetch.mockRejectedValue(new Error('Network error'));
 
     render(<SearchComponent />);
-    const input = screen.getByPlaceholderText('Sök efter ett ord...');
+    const input = screen.getByPlaceholderText('Search for a word...');
     userEvent.type(input, 'hello');
-    const button = screen.getByRole('button', { name: /sök/i });
+    const button = screen.getByRole('button', { name: /search/i });
     userEvent.click(button);
 
-    const errorMessage = await screen.findByText(/* Correct error message text */);
-    expect(errorMessage).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Network error')).toBeInTheDocument();
+    });
   });
 });
+
 
 describe('SearchComponent Error Handling', () => {
   test('displays error message on empty search', async () => {
     render(<SearchComponent />);
     
     // Simulate a click on the search button without typing anything
-    const button = screen.getByRole('button', { name: /sök/i });
+    const button = screen.getByRole('button', { name: /search/i });
     userEvent.click(button);
 
     // Wait for the error message to be displayed

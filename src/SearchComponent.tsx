@@ -3,33 +3,36 @@ import styled from 'styled-components';
 
 const SearchComponent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [definition, setDefinition] = useState<string | null>(null);
+  const [definitions, setDefinitions] = useState<string[]>([]);
+  const [synonyms, setSynonyms] = useState<string[]>([]);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchDefinition = async (word: string) => {
-    // Make call to the API, fails give error messages and empty search too
     try {
       const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
       if (!response.ok) {
-        if (response.status === 404) {
-          setDefinition('Word not found in the dictionary.');
-          setAudioUrl(null);
-        } else {
-          throw new Error('Failed to fetch the definition.');
-        }
-        return;
+        throw new Error(response.status === 404 ? 'Word not found in the dictionary.' : 'Failed to fetch the definition.');
       }
       const data = await response.json();
-      const definitions = data[0].meanings.map((meaning: any) => meaning.definitions.map((def: any) => def.definition).join('\n')).join('\n\n');
-      setDefinition(definitions);
+      const meanings = data[0].meanings;
 
-      // Check if there is an audio URL and set it
+      const newDefinitions = meanings.flatMap((meaning: any) => meaning.definitions.map((def: any) => def.definition));
+      const newSynonyms = meanings.flatMap((meaning: any) => meaning.synonyms).flat().filter(Boolean);
+
+
+      setDefinitions(newDefinitions);
+      setSynonyms(newSynonyms);
+
+
       const audio = data[0].phonetics.find((phonetic: any) => phonetic.audio);
       setAudioUrl(audio ? audio.audio : null);
     } catch (error) {
-      console.error('Error fetching definition:', error);
-      setDefinition(null);
+      const message = (error instanceof Error) ? error.message : 'An unknown error occurred';
+      console.error('Error fetching definition:', message);
+      setErrorMessage(message);
+      setDefinitions([]);
+      setSynonyms([]);
       setAudioUrl(null);
     }
   };
@@ -37,7 +40,8 @@ const SearchComponent: React.FC = () => {
   const handleSearch = () => {
     if (!searchTerm.trim()) {
       setErrorMessage('Please enter a word to search.');
-      setDefinition(null);
+      setDefinitions([]);
+      setSynonyms([]);
       setAudioUrl(null);
       return;
     }
@@ -51,32 +55,67 @@ const SearchComponent: React.FC = () => {
   };
 
   return (
-   <div>
-    <Container>
-      <SearchInput
-        type="text"
-        placeholder="Search for a word..."
-        value={searchTerm}
-        onChange={handleChange}
-      />
-      <SearchButton onClick={handleSearch}>Search</SearchButton>
+    <div>
+      <Container>
+        <SearchInput
+          type="text"
+          placeholder="Search for a word..."
+          value={searchTerm}
+          onChange={handleChange}
+        />
+        <SearchButton onClick={handleSearch}>Search</SearchButton>
       </Container>
-
-      {errorMessage && <ErrorMessage><p>{errorMessage}</p></ErrorMessage>}
-      {definition && (
-        <Definition>
-          <h3>Definition:</h3>
-          <p>{definition}</p>
-        </Definition>
-      )}
+      <Content>
+        <Column>
+          {definitions.length > 0 && (
+            <Definition>
+              <Header>Definition:</Header>
+              {definitions.map((def, index) => <p key={index}>{def}</p>)}
+            </Definition>
+          )}
+        </Column>
+        <Column>
+          {synonyms.length > 0 && (
+            <Synonyms>
+              <Header>Synonyms:</Header>
+              <p>{synonyms.join(', ')}</p>
+            </Synonyms>
+          )}
+        </Column>
+      </Content>
       {audioUrl && (
-        <audio controls src={audioUrl}>
-          Your browser does not support the audio element.
-        </audio>
+        <AudioContainer>
+          <audio controls src={audioUrl}>
+            Your browser does not support the audio element.
+          </audio>
+        </AudioContainer>
       )}
-  </div>     
+      {errorMessage && <ErrorMessage><p>{errorMessage}</p></ErrorMessage>}
+    </div>
   );
 };
+
+const Content = styled.div`
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+`;
+
+const Column = styled.div`
+  flex: 1;
+  padding: 0 10px;
+`;
+
+
+const AudioContainer = styled.div`
+  margin-top: 20px;
+  text-align: center;
+`;
+
+
+const Header = styled.h3`
+font-weight: bold;
+`
 
 const Container = styled.div`
 display: flex;
@@ -120,6 +159,8 @@ const ErrorMessage = styled.div`
 const Definition = styled.div`
   margin-top: 10px;
 `;
+
+const Synonyms = styled(Definition)``;
 
 
 export default SearchComponent;
