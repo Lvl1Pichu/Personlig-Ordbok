@@ -24,9 +24,8 @@ describe('SearchComponent Event Handling', () => {
     render(<SearchComponent />);
     const input = screen.getByPlaceholderText('Search for a word...');
     userEvent.type(input, 'hello');
-    const button = screen.getByRole('button', { name: /search/i }); // Corrected button text
+    const button = screen.getByRole('button', { name: /search/i });
     userEvent.click(button);
-    // Additional assertions or wait operations might be required here
   });
 });
 global.fetch = vi.fn(() =>
@@ -87,9 +86,8 @@ describe('SearchComponent Error Handling', () => {
     const button = screen.getByRole('button', { name: /search/i });
     userEvent.click(button);
 
-    await waitFor(() => {
-      expect(screen.getByText('Network error')).toBeInTheDocument();
-    });
+    const errorMessage = await screen.findByText('Network error');
+    expect(errorMessage).toBeInTheDocument();
   });
 });
 
