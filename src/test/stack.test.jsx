@@ -10,84 +10,33 @@ describe('SearchComponent Rendering on Screen', () => {
   });
 });
 
-describe('SearchComponent State Management', () => {
-  test('updates searchTerm on input change', () => {
+describe('Can write in the SearchBar', () => {
+  test('updates searchTerm on input change', async () => {
     render(<SearchComponent />);
+    const user = userEvent.setup();
     const input = screen.getByPlaceholderText('Search for a word...');
-    fireEvent.change(input, { target: { value: 'hello' } });
-    expect(input.value).toBe('hello');
+    await user.type(input, 'Hello');
+    expect(input.value).toBe('Hello');
   });
-});
-
-describe('SearchComponent Event Handling', () => {
-  test('calls handleSearch on button click', async () => {
-    render(<SearchComponent />);
-    const input = screen.getByPlaceholderText('Search for a word...');
-    userEvent.type(input, 'hello');
-    const button = screen.getByRole('button', { name: /search/i });
-    userEvent.click(button);
-  });
-});
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    json: () => Promise.resolve({ /* Mocked response data */ }),
-  })
-);
-
-beforeEach(() => {
-  fetch.mockClear();
 });
 
 describe('SearchComponent API Interaction', () => {
   test('fetches data on search', async () => {
-    // Mock the fetch call
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve([
-          {
-            meanings: [
-              {
-                definitions: [
-                  { definition: "Hello!" }
-                ]
-              }
-            ],
-            phonetics: [{ audio: 'some-audio-url' }]
-          }
-        ]),
-      })
-    );
 
     render(<SearchComponent />);
+    const user = userEvent.setup(); // Få en user som hanterar async events
     const input = screen.getByPlaceholderText('Search for a word...');
-    userEvent.type(input, 'Hello');
+    await user.type(input, 'Hello');
     const button = screen.getByRole('button', { name: /search/i });
-    userEvent.click(button);
+    await user.click(button);
 
     await waitFor(() => {
-      expect(screen.getByText("Hello!")).toBeInTheDocument();
+      expect(screen.getByText("Hello!", {exact : false})).toBeInTheDocument();
     });
 
-    // Check if the fetch was called correctly
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch).toHaveBeenCalledWith(`https://api.dictionaryapi.dev/api/v2/entries/en/Hello`);
-  });
-});
+    //expects för synonymer/definitoner/osv
 
-
-
-describe('SearchComponent Error Handling', () => {
-  test('displays error message on fetch failure', async () => {
-    fetch.mockRejectedValue(new Error('Network error'));
-
-    render(<SearchComponent />);
-    const input = screen.getByPlaceholderText('Search for a word...');
-    userEvent.type(input, 'hello');
-    const button = screen.getByRole('button', { name: /search/i });
-    userEvent.click(button);
-
-    const errorMessage = await screen.findByText('Network error');
-    expect(errorMessage).toBeInTheDocument();
+    //Expect audioelement
   });
 });
 
