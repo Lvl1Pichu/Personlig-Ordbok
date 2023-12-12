@@ -85,7 +85,7 @@ const SearchComponent: React.FC = () => {
       </Content>
       {audioUrl && (
         <AudioContainer>
-          <audio controls src={audioUrl}>
+          <audio data-testid="audio-player" controls src={audioUrl}>
             Your browser does not support the audio element.
           </audio>
         </AudioContainer>

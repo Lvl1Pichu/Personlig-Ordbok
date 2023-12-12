@@ -10,7 +10,7 @@ describe('SearchComponent Rendering on Screen', () => {
   });
 });
 
-describe('Can write in the SearchBar', () => {
+describe('Can write in the SearchComponent', () => {
   test('updates searchTerm on input change', async () => {
     render(<SearchComponent />);
     const user = userEvent.setup();
@@ -22,36 +22,46 @@ describe('Can write in the SearchBar', () => {
 
 describe('SearchComponent API Interaction', () => {
   test('fetches data on search', async () => {
-
     render(<SearchComponent />);
-    const user = userEvent.setup(); // Få en user som hanterar async events
+    const user = userEvent.setup();
     const input = screen.getByPlaceholderText('Search for a word...');
     await user.type(input, 'Hello');
     const button = screen.getByRole('button', { name: /search/i });
     await user.click(button);
 
     await waitFor(() => {
+      //Expect definition
       expect(screen.getByText("Hello!", {exact : false})).toBeInTheDocument();
+      //Expect Synonym
+      expect(screen.getByText('greeting')).toBeInTheDocument();
+      //Expect audio element
+      expect(screen.getByTestId('audio-player')).toBeInTheDocument  
     });
-
-    //expects för synonymer/definitoner/osv
-
-    //Expect audioelement
   });
 });
 
 
-describe('SearchComponent Error Handling', () => {
+describe('SearchComponent Handling Empty Search', () => {
   test('displays error message on empty search', async () => {
     render(<SearchComponent />);
-    
-    // Simulate a click on the search button without typing anything
     const button = screen.getByRole('button', { name: /search/i });
     userEvent.click(button);
-
-    // Wait for the error message to be displayed
     const errorMessage = await screen.findByText('Please enter a word to search.');
     expect(errorMessage).toBeInTheDocument();
   });
 });
 
+
+describe('SearchComponent Error Handling', () => {
+  test('displays error message when no word matches the search', async () => {
+    render(<SearchComponent />);
+    const user = userEvent.setup();
+    const input = screen.getByPlaceholderText('Search for a word...');
+    const button = screen.getByRole('button', { name: /search/i });
+    await user.type(input, 'Hellfgjgj');
+    await user.click(button);
+
+    const errorMessage = await screen.findByText('Word not found in the dictionary.');
+    expect(errorMessage).toBeInTheDocument();
+  });
+});
